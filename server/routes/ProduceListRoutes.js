@@ -15,7 +15,7 @@ router.post('/add', async (req, res) => {
     
     try {
         await ProduceItemModel.insertMany(produce);
-        res.status(201).json({ message: "Produce added successfully.", count: produce.length });
+        res.status(201).json({ message: "Produce added successfully!", count: produce.length });
     } catch (error) {
         console.error("Failed to add produce:", error);
         res.status(500).json({ message: "An error occurred while adding produce." });
@@ -47,7 +47,8 @@ router.get('/type/:type', async (req, res) => {
         if (filteredProduce.length === 0) {
             return res.status(404).json({ message: "No produce found for the given type." });
         }
-        res.json(filteredProduce); 
+        const message = `Produce of type ${type}`;
+        return res.status(200).json({ produce: filteredProduce, message}); 
     } catch (error) {
         console.error("Failed to filter produce:", error);
         res.status(500).json({ message: "An error occurred while filtering produce." });

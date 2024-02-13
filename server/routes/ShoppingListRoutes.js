@@ -16,16 +16,24 @@ router.post('/add', async (req, res) => {
         marked: req.body.marked
     }
     const itemName = item.name
+    const isAre = itemName.endsWith('s') ? 'are' : 'is'
+    const wereWas = itemName.endsWith('s') ? 'were' : 'was'
 
     try {
         
         if (item.month !== currentMonth) {
-            const isAre = itemName.endsWith('s') ? 'are' : 'is'
             const message = `${itemName} ${isAre} not in season!`
-            return res.status(400).json({ message: message });
+            return res.status(400).json({ error: true, message: message });
         }
 
-        const wereWas = itemName.endsWith('s') ? 'were' : 'was'
+        const existingItem = await ShoppingListModel.findOne({ name: itemName });
+        if (existingItem) {
+            // Item already exists, return an error or a message
+            const message = `${itemName} ${isAre} already added!`;
+            console.log(message)
+            return res.status(400).json({ error: true, message: message });
+        }
+
         const shoppingListItem = new ShoppingListModel(item)
         const addedItem = await shoppingListItem.save()
         const message = `${itemName} ${wereWas} added to the list!`
@@ -42,7 +50,7 @@ router.get('/', async (req, res) => {
     try {
         const shoppingList = await ShoppingListModel.find()
         if (shoppingList.length === 0) {
-            res.json({ message: "Shopping list is empty!" })
+           return res.json({ message: "Shopping list is empty!" })
         }
         res.status(200).json({ shoppingList, message: "Shopping list" })
     } catch (error) {
@@ -82,10 +90,10 @@ router.delete('/delete/:_id', async (req, res) => {
         const itemName = item.name
         const wereWas = itemName.endsWith('s') ? 'were' : 'was'
         const message = `${itemName} ${wereWas} removed`
-        res.json({ message });
+        return res.json({ message });
     } catch (error) {
         console.error('Failed to delete item from shopping list:', error);
-        res.status(500).json({ message: 'An error occurred while deleting item from shopping list.' });
+        return res.status(500).json({ message: 'An error occurred while deleting item from shopping list.' });
     }
 })
 
@@ -93,10 +101,10 @@ router.delete('/delete/:_id', async (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
         await ShoppingListModel.deleteMany()
-        res.json({ message: 'Shopping list is empty!' })
+        return res.json({ message: 'Shopping list is empty!' })
     } catch (error) {
         console.error('Failed to delete all items from shopping list:', error)
-        res.status(500).json({ message: 'An error occurred while deleting all items from shopping list.' })
+        return res.status(500).json({ message: 'An error occurred while deleting all items from shopping list.' })
     }
 })
 

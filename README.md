@@ -10,7 +10,7 @@ I thought the idea was a good way to continue learning with React and so I built
 
 The original app was purely a frontend project built entirely in React, making use of custom context hooks for managing persistent state changes.
 
-Version 2 is a full stack MERN application built using a React-Native frontend, Node Express server and a MongoDB database. The dummy data is still the same as in v1 but this time data is retreived from Mongo via CRUD routes making for a more robust application. 
+Version 2 is a full stack MERN application built using a React JS frontend, Node Express server and a MongoDB database. The dummy data is still the same as in v1 but this time data is retreived from Mongo via CRUD routes making for a more robust application. 
 
 ## Deployment
 

@@ -29,6 +29,7 @@ mongoose.connect(MONGODB_CONNECTION_STRING, { dbName: 'seasonit-db' })
     console.log('Connected to MongoDB')
 }).catch(console.error)
 
+
 mongoose.connection.on('connected', () => {
     console.log('Mongoose connected to:', mongoose.connection.db.databaseName);
 })
