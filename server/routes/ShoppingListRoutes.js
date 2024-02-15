@@ -21,11 +21,13 @@ router.post('/add', async (req, res) => {
 
     try {
         
+        // Check if item is in season
         if (item.month !== currentMonth) {
             const message = `${itemName} ${isAre} not in season!`
             return res.status(400).json({ error: true, message: message });
         }
 
+        // Check if item is already in shopping list
         const existingItem = await ShoppingListModel.findOne({ name: itemName });
         if (existingItem) {
             // Item already exists, return an error or a message
@@ -60,24 +62,24 @@ router.get('/', async (req, res) => {
 })
 
 // Set item in shopping list to marked
-router.put('/mark/:_id', async (req, res) => {
+// router.put('/mark/:_id', async (req, res) => {
     
-    const { _id } = req.params
+//     const { _id } = req.params
     
-    try {
-        const item = await ShoppingListModel.findById(_id)
-        if (!item) {
-            console.log(_id)
-            return res.status(404).json({ message: "Item not found" })
-        }
-        item.marked = !item.marked
-        await item.save()
-        res.json(item)
-    } catch (error) {
-        console.error('Failed to mark item in shopping list:', error)
-        res.status(500).json({ message: 'An error occurred while marking item in shopping list.' })
-    }
-})
+//     try {
+//         const item = await ShoppingListModel.findById(_id)
+//         if (!item) {
+//             console.log(_id)
+//             return res.status(404).json({ message: "Item not found" })
+//         }
+//         item.marked = !item.marked
+//         await item.save()
+//         res.json(item)
+//     } catch (error) {
+//         console.error('Failed to mark item in shopping list:', error)
+//         res.status(500).json({ message: 'An error occurred while marking item in shopping list.' })
+//     }
+// })
 
 // Delete item from shopping list
 router.delete('/delete/:_id', async (req, res) => {
