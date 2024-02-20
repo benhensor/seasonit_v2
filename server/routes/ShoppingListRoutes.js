@@ -1,12 +1,18 @@
 import express from 'express'
 
+import { ProduceItemModel } from '../models/Produce.js'
 import { ShoppingListModel } from '../models/ShoppingList.js'
 
 const router = express.Router()
 
-// Add produce to shopping list
-router.post('/add', async (req, res) => {
+// Utility for logging and error handling
+const logAndHandleError = (error, operation, res, next) => {
+    console.error(`Failed to ${operation}:`, error)
+    next(error)
+}
 
+// Add produce to shopping list
+router.post('/add', async (req, res, next) => {
     const currentMonth = new Date().toLocaleString('default', { month: 'long' })
     const item = {
         name: req.body.name,
@@ -15,99 +21,61 @@ router.post('/add', async (req, res) => {
         month: req.body.month,
         marked: req.body.marked
     }
-    const itemName = item.name
-    const isAre = itemName.endsWith('s') ? 'are' : 'is'
-    const wereWas = itemName.endsWith('s') ? 'were' : 'was'
-
+    const isAre = item.name.endsWith('s') ? 'are' : 'is'
+    const wereWas = item.name.endsWith('s') ? 'were' : 'was'
     try {
-        
-        // Check if item is in season
-        if (item.month !== currentMonth) {
-            const message = `${itemName} ${isAre} not in season!`
-            return res.status(400).json({ error: true, message: message });
+        const itemEntries = await ProduceItemModel.find({ name: item.name })
+        if (!itemEntries.some(item => item.month === currentMonth)) {
+            return res.status(400).json({ message: `${item.name} ${isAre} not in season` })
         }
-
-        // Check if item is already in shopping list
-        const existingItem = await ShoppingListModel.findOne({ name: itemName });
+        const existingItem = await ShoppingListModel.findOne({ name: item.name })
         if (existingItem) {
-            // Item already exists, return an error or a message
-            const message = `${itemName} ${isAre} already added!`;
-            console.log(message)
-            return res.status(400).json({ error: true, message: message });
-        }
-
-        const shoppingListItem = new ShoppingListModel(item)
-        const addedItem = await shoppingListItem.save()
-        const message = `${itemName} ${wereWas} added to the list!`
-        return res.status(201).json({ item: addedItem, message })
-
+            return res.status(400).json({ message: `${item.name} ${isAre} already added` })
+        } 
+        const addedItem = await new ShoppingListModel(item).save()
+        return res.status(201).json({ message: `${item.name} ${wereWas} added to the list` })
     } catch (error) {
-        console.error('Failed to add item to shopping list:', error)
-        res.status(500).json({ message: 'An error occurred while adding item to shopping list.' })
+        logAndHandleError(error, 'add item to shopping list', res, next)
     }
 })
 
 // Get shopping list
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
     try {
         const shoppingList = await ShoppingListModel.find()
-        if (shoppingList.length === 0) {
-           return res.json({ message: "Shopping list is empty!" })
-        }
-        res.status(200).json({ shoppingList, message: "Shopping list" })
+        res.status(200).json({ shoppingList, message: shoppingList.length ? 'Shopping list' : 'Shopping list is empty!' });
     } catch (error) {
-        console.error('Failed to retrieve shopping list:', error)
-        res.status(500).json({ message: 'An error occurred while retrieving shopping list.' })
+        logAndHandleError(error, 'fetch shopping list', res, next)
     }
 })
 
-// Set item in shopping list to marked
-// router.put('/mark/:_id', async (req, res) => {
-    
-//     const { _id } = req.params
-    
-//     try {
-//         const item = await ShoppingListModel.findById(_id)
-//         if (!item) {
-//             console.log(_id)
-//             return res.status(404).json({ message: "Item not found" })
-//         }
-//         item.marked = !item.marked
-//         await item.save()
-//         res.json(item)
-//     } catch (error) {
-//         console.error('Failed to mark item in shopping list:', error)
-//         res.status(500).json({ message: 'An error occurred while marking item in shopping list.' })
-//     }
-// })
-
 // Delete item from shopping list
-router.delete('/delete/:_id', async (req, res) => {
-    const { _id } = req.params
+router.delete('/items/:_id', async (req, res, next) => {
     try {
-        const item = await ShoppingListModel.findByIdAndDelete(_id);
+        const item = await ShoppingListModel.findByIdAndDelete(req.params._id)
         if (!item) {
-            return res.status(404).json({ message: 'Item not found.' });
+            return res.status(404).json({ message: 'Item not found.' })
         }
-        const itemName = item.name
-        const wereWas = itemName.endsWith('s') ? 'were' : 'was'
-        const message = `${itemName} ${wereWas} removed`
-        return res.json({ message });
+        res.json({ message: 'Item removed' })
     } catch (error) {
-        console.error('Failed to delete item from shopping list:', error);
-        return res.status(500).json({ message: 'An error occurred while deleting item from shopping list.' });
+        logAndHandleError(error, 'delete item from shopping list', res, next)
     }
 })
 
 // Delete all items from shopping list
-router.delete('/delete', async (req, res) => {
+router.delete('/items', async (req, res, next) => {
     try {
         await ShoppingListModel.deleteMany()
-        return res.json({ message: 'Shopping list is empty!' })
+        console.info('All items were deleted')
+        res.json({ message: 'Cleared!' })
     } catch (error) {
-        console.error('Failed to delete all items from shopping list:', error)
-        return res.status(500).json({ message: 'An error occurred while deleting all items from shopping list.' })
+        logAndHandleError(error, 'delete all items from shopping list', res, next)
     }
+})
+
+router.use((error, req, res, next) => {
+    console.error(error)
+    res.status(500).json({ message: 'An error occurred.'})
 })
 
 
