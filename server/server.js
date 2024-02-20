@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000
 // Middleware
 app.use(express.json())
 app.use(cors({
-    origin: ['https://seasonit-v2-server.vercel.app'],
+    origin: ['https://seasonit-v2.vercel.app'],
     credentials: true,
 }))
 
