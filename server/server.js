@@ -11,12 +11,18 @@ const app = express()
 
 const MONGODB_CONNECTION_STRING = process.env.MONGODB_CONNECTION_STRING
 const PORT = process.env.PORT || 5000
-
+const allowedOrigins = ['https://seasonit-v2.vercel.app', 'http://localhost:3000']
 
 // Middleware
 app.use(express.json())
 app.use(cors({
-    origin: ['https://seasonit-v2.vercel.app'],
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS'))
+        }
+    },
     credentials: true,
 }))
 
